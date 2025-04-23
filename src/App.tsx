@@ -5,7 +5,7 @@ import { AnnouncementType, ListData } from './types';
 
 
 const token_dict = {"jupyterhubApiToken": import.meta.env.VITE_COMPUTE_TOKEN};
-console.log(token_dict);
+// console.log(token_dict);
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
