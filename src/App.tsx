@@ -324,11 +324,11 @@ function App() {
         <Tabs variant="enclosed">
           <TabPanels>
             <TabPanel>
-              {/* ANNOUNCEMENTS 
+              {/* ANNOUNCEMENTS */}
               <Box className="mb-4">
                 <Heading size="md" className="mb-2">Announcements</Heading>
                 <Announcements />
-              </Box>*/}
+              </Box>
 
               <Box className="text-left">
                 {/* JOB TEMPLATE DROPDOWN */}

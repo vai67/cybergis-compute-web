@@ -4,6 +4,17 @@
 
 [CyberGIS-Compute Python SDK](https://cybergis.github.io/cybergis-compute-python-sdk/)
 
+
+## To Dos:
+
+- [ ] Loading screen while initial data fetch happens (especially git route)
+- [ ] Update HPC dropdown based on job
+- [ ] Implement parameter inputs
+- [ ] Implement SLURM parameter inputs
+- [ ] Implement result downloading
+- [ ] Implement input data uploading
+- [ ] A way to view previous results (by ID?) or download results from previous runs
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
