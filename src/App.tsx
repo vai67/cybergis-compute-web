@@ -182,6 +182,7 @@ function App() {
   const handleJobNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setJobName(event.target.value);
     console.log(169, 'Job name changed to:', event.target.value);
+    // also update the parameters and everything here
   }
 
   // Code to handle job submission
@@ -309,7 +310,7 @@ function App() {
     <ChakraProvider>
       <Box className="p-4">
         <Box className="flex justify-between items-center border-b pb-4 mb-4">
-          <Heading size="lg">Welcome to CyberGIS-Compute</Heading>
+          <Heading size="lg">CyberGIS-Compute Web App (ALPHA RELEASE, UNSTABLE)</Heading>
           <Tabs variant="enclosed">
             <TabList>
               <Tab>Job Configuration</Tab>
@@ -323,11 +324,11 @@ function App() {
         <Tabs variant="enclosed">
           <TabPanels>
             <TabPanel>
-              {/* ANNOUNCEMENTS */}
+              {/* ANNOUNCEMENTS 
               <Box className="mb-4">
                 <Heading size="md" className="mb-2">Announcements</Heading>
                 <Announcements />
-              </Box>
+              </Box>*/}
 
               <Box className="text-left">
                 {/* JOB TEMPLATE DROPDOWN */}
@@ -392,8 +393,8 @@ function App() {
                 </Box>
               </Box>
               <Text className="mb-4">{submissionResponse ? submissionResponse : "Submit a job to view its status"}</Text>
-              <Text className="mb-4">{jobFinished ? jobFinished : "Awaiting Job Completion"}</Text>
-              <Text className="mb-4">{jobOutput ? jobOutput : "Awaiting Job Completion"}</Text>
+              <Text className="mb-4">{jobFinished ? jobFinished : "Awaiting Job Submission"}</Text>
+              <Text className="mb-4">{jobOutput ? jobOutput : "Awaiting Job Submission"}</Text>
             </TabPanel>
             <TabPanel>
               {/* Add content for "Your Job Status" tab here */}

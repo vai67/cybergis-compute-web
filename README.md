@@ -1,3 +1,9 @@
+# CyberGIS-Compute Web App
+
+**THIS IS VERY EARLY WORK, PLEASE USE OUR PYTHON SDK**
+
+[CyberGIS-Compute Python SDK](https://cybergis.github.io/cybergis-compute-python-sdk/)
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
