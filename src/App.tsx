@@ -203,9 +203,9 @@ function App() {
         },
         body: JSON.stringify(
           {
-            'maintainer': "community_contribution",  // only one we support currently
-            "jupyterhubApiToken": token_dict["jupyterhubApiToken"],  // just passing oauth
-            "hpc": selectedHpc ? selectedHpc : "keeling_community", // hard-coding for now
+            'maintainer': "community_contribution",
+            "jupyterhubApiToken": token_dict["jupyterhubApiToken"],
+            "hpc": selectedHpc ? selectedHpc : "keeling_community"
           }
         )
       })
@@ -225,8 +225,19 @@ function App() {
           {
             "jupyterhubApiToken": token_dict["jupyterhubApiToken"],  // passing oauth
             "localExecutableFolder": {"type": "git", "gitId": selectedJob ? selectedJob : "hello_world"},  // basically just pass the jobID in as the gitId
-            "param": {"example": "example here"},  // any parameters to pass
-            "slurm": {"time": "30:00", "memory": "16GB"},  // slurm variables, I'm just hard-coding for now
+            "slurm": {"time": "30:00", "memory": "16GB"},
+            "param": {
+              "mobility_mode": "DRIVING",
+              "population_type": "ZIP",
+              "max_travel_time": "30",
+              "access_measure": "ALL",
+              "supply_filename": "supply/ContinentalHospitals.shp",
+              "supply_capacity": "BEDS",
+              "supply_latlon_or_id": "ID",
+              "supply_id": "ZIP",
+              "supply_lat": "",
+              "supply_lon": ""
+            },
           }
         )
       })
@@ -272,7 +283,7 @@ function App() {
     setSubmissionResponse('✅ job submitted');
 
     var jobCompleted = false;
-    const maxChecks = 100;
+    const maxChecks = 10000;
     var numChecks = 0;
     var jobStatusResponse = null;
     while (!jobCompleted && (numChecks < maxChecks)) {
