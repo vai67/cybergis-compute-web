@@ -5,6 +5,8 @@ import { AnnouncementType, ListData } from './types';
 
 
 const token_dict = {"jupyterhubApiToken": import.meta.env.VITE_COMPUTE_TOKEN};
+var jobID = "";
+var downloadID = "";
 // console.log(token_dict);
 
 function sleep(ms: number) {
@@ -193,7 +195,6 @@ function App() {
     // 3. POST /job/:id/submit - to tell the backend the job should be submitted
 
     // create the Job and get an id
-    var jobID = null;
     await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/job',
       {
         method: "POST",
@@ -299,12 +300,48 @@ function App() {
       if (jobStatusResponse != null && jobStatusResponse["finishedAt"] != null) {
         jobCompleted = true;
         // grab the logs
+        downloadID = jobStatusResponse['remoteResultFolder']['id'];
         setJobFinished("Job is Finished!!!");
       }
     }
     return null;
   };
 
+
+  // Code to handle job submission
+  const handleDownloadResult = async () => {
+    // create the Job and get an id
+    await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/folder/' + downloadID + '/download/browser',
+      {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          {
+            "jupyterhubApiToken": token_dict["jupyterhubApiToken"],
+            "jobId": jobID,
+            "folderId": downloadID
+          }
+        )
+      })
+      .then(async function (response) {
+        if (response.status !== 200) {
+          console.log(
+            'Looks like there was a problem. Status Code: ' + response.status
+          );
+          return;
+        }
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = 'result.zip';
+        link.click();
+        URL.revokeObjectURL(objectUrl);
+      })
+    console.log("New job ID is:", jobID);
+  };
 
   return (
     <ChakraProvider>
@@ -395,6 +432,9 @@ function App() {
               <Text className="mb-4">{submissionResponse ? submissionResponse : "Submit a job to view its status"}</Text>
               <Text className="mb-4">{jobFinished ? jobFinished : "Awaiting Job Submission"}</Text>
               <Text className="mb-4">{jobOutput ? jobOutput : "Awaiting Job Submission"}</Text>
+              <Box>
+                  <Button colorScheme="blue" className="mt-4" onClick={handleDownloadResult}>Download Result</Button>
+                </Box>
             </TabPanel>
             <TabPanel>
               {/* Add content for "Your Job Status" tab here */}
