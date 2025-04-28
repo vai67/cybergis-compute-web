@@ -112,6 +112,8 @@ Lastly, you want to submit the job. Example:
 
 You can get a job's status using the POST /job/:id route. Example:
 
+**Note:** You need to repeatedly query this, it is not a webhook. We are working to re-implement this route as a webhook. Please wait a second or more between queries to not overwhelm the Core server.
+
 ```
 await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/job/' + jobID,
         {
