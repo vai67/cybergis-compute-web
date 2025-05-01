@@ -450,11 +450,7 @@ function App() {
                   type="file"
                   id="upload"
                   onChange={handleFileChange}
-                  style={{ display: "none" }}
                 />
-                <label htmlFor="upload">
-                  <button>Select File</button>
-                </label>
                 <Box className="mt-4">
                   <Checkbox>Receive email on job status? (Not implemented yet)</Checkbox>
                   <Input placeholder="example@illinois.edu" className="mt-2"/>
