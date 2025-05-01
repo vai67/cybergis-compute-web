@@ -226,7 +226,7 @@ function App() {
       formData.append("jobId", jobID);
       formData.append("file", file);
       // upload
-      await fetch('https://cgjobup-test.cigi.illinois.edu/v2/upload', {
+      await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/upload', {
         method: "POST",
         body: formData
       });
