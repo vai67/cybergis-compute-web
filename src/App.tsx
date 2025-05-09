@@ -71,6 +71,12 @@ function App() {
   const [submissionResponse, setSubmissionResponse] = useState<string>('');
   const [jobFinished, setJobFinished] = useState<string>('');
   const [jobOutput, setJobOutput] = useState<string>('');
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0] || null;
+    setFile(selectedFile);
+  };
 
   // Code to load data from flask backend at start
   useEffect(() => {
@@ -213,6 +219,18 @@ function App() {
       .then(data => {console.log(data); jobID = data["id"];})
       .then(err => {console.log(err); return null});
     console.log("New job ID is:", jobID);
+
+    if (file !== null) {
+      const formData = new FormData()
+      formData.append("jupyterhubApiToken", token_dict["jupyterhubApiToken"]);
+      formData.append("jobId", jobID);
+      formData.append("file", file);
+      // upload
+      await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/upload', {
+        method: "POST",
+        body: formData
+      });
+    }
 
     // set the job parameters
     await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/job/' + jobID,
@@ -428,6 +446,11 @@ function App() {
                     </AccordionPanel>
                   </AccordionItem>
                 </Accordion>
+                <input
+                  type="file"
+                  id="upload"
+                  onChange={handleFileChange}
+                />
                 <Box className="mt-4">
                   <Checkbox>Receive email on job status? (Not implemented yet)</Checkbox>
                   <Input placeholder="example@illinois.edu" className="mt-2"/>
