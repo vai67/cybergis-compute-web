@@ -445,12 +445,22 @@ function App() {
                       {/* Add content for Input Parameters here */}
                     </AccordionPanel>
                   </AccordionItem>
+                  <AccordionItem>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left">
+                        Data Upload
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={4}>
+                      <input
+                      type="file"
+                      id="upload"
+                      onChange={handleFileChange}
+                      />
+                    </AccordionPanel>
+                  </AccordionItem>
                 </Accordion>
-                <input
-                  type="file"
-                  id="upload"
-                  onChange={handleFileChange}
-                />
                 <Box className="mt-4">
                   <Checkbox>Receive email on job status? (Not implemented yet)</Checkbox>
                   <Input placeholder="example@illinois.edu" className="mt-2"/>
