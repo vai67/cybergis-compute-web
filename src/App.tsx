@@ -198,7 +198,8 @@ function App() {
     // submitting a job takes three steps
     // 1. POST /job - to create the job object in the backend and get an ID
     // 2. PUT /job/:id - to set the data for the Job object
-    // 3. POST /job/:id/submit - to tell the backend the job should be submitted
+    // 3. POST /upload - to upload data that will used with the corresponding job (ID passed in formdata)
+    // 4. POST /job/:id/submit - to tell the backend the job should be submitted
 
     // create the Job and get an id
     await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/job',
@@ -220,6 +221,7 @@ function App() {
       .then(err => {console.log(err); return null});
     console.log("New job ID is:", jobID);
 
+    // upload a zip file input (optional)
     if (file !== null) {
       const formData = new FormData()
       formData.append("jupyterhubApiToken", token_dict["jupyterhubApiToken"]);
