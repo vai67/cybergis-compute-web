@@ -2,6 +2,8 @@ import { useState, useEffect, ChangeEvent } from 'react'
 import './App.css'
 import { TabList, TabPanel, Tab, Tabs, TabPanels, ChakraProvider, Box, Heading, Text, Select, Input, Checkbox, Button, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon} from '@chakra-ui/react';
 import { AnnouncementType, ListData } from './types';
+import Loading from './Loading';
+import React from 'react';
 
 
 const token_dict = {"jupyterhubApiToken": import.meta.env.VITE_COMPUTE_TOKEN};
@@ -58,6 +60,7 @@ export const getInitialRender = async (): Promise<ListData | undefined> => {
 }
 
 function App() {
+  const [loading, setLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<AnnouncementType[]>([]);
   // const [jobs, setJobs] = useState<JobType[]>([]);
   // const [hpcs, setHpcs] = useState<HpcType[]>([]);
@@ -73,6 +76,28 @@ function App() {
   const [jobOutput, setJobOutput] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
+  //Task 3
+  const [params, setParams] = React.useState({
+    mobility_mode: "",
+    population_type: "",
+    max_travel_time: "",
+    access_measure: "",
+    supply_filename: "",
+    supply_capacity: "",
+    supply_latlon_or_id: "",
+    supply_id: "",
+    supply_lat: "",
+    supply_lon: ""
+  });
+
+  //Task 4
+  const [slurmParams, setSlurmParams] = React.useState({
+    time: "",
+    memory: "",
+  });
+  
+  
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
     setFile(selectedFile);
@@ -81,6 +106,7 @@ function App() {
   // Code to load data from flask backend at start
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const listData: ListData | undefined = await getInitialRender();
       const listDataElements = listData!.data;
       if (listData) {
@@ -93,10 +119,13 @@ function App() {
       } else {
         console.error("Failed to fetch list data.");
       }
+      setLoading(false);
     };
 
     fetchData();
   }, []);
+
+  if (loading) return <Loading />;
 
   // Code for announcements component
   const Announcements = () => {
@@ -120,12 +149,53 @@ function App() {
     );
   };
 
+  //Task 2 
+  const jobToHpcMap: { [key: string]: string[] } = {
+    "wrfhydro-5.x": ["keeling_community", "expanse_community", "anvil_community"],
+    "WRFHydro_Postprocess" : ["anvil_community"],
+    "Watershed_DEM_Raster_Connector" : ["anvil_community"],
+    "three-examples" : ["anvil_community", "expanse_community", "keeling_community", "rails_community"],
+    "summa3" : ["keeling_community", "expanse_community"],
+    "Subset_AORC_Forcing_Data_Processor" : ["anvil_community"],
+    "SimpleDataProc_Processor" : ["anvil_community"],
+    "SimpleDataClean_Processor" : ["anvil_community"],
+    "simple-g" : ["anvil_community"],
+    "pysal-access" : ["anvil_community", "expanse_community", "keeling_community"],
+    "population_vulnerable_to_dam_failure" : ["anvil_community", "keeling_community"],
+    "mpi-test" : ["keeling_community", "expanse_community", "anvil_community"],
+    "herop_spatial_access" : ["keeling_community"],
+    "hello_world" : ["aces_community", "anvil_community", "expanse_community", "keeling_community", "rails_community"],
+    "geoai-gpu": ["anvil_gpu", "keeling_gpu", "keeling_community"],
+    "Extract_Inundation_Census_Tracts_Processor" : ["anvil_community"],
+    "ERA5_Connector" : ["anvil_community"],
+    "DEM_Raster_Reprojection_Processor" : ["anvil_community"],
+    "DEM_Raster_Merging_Processor": ["anvil_community"],
+    "DEM_Raster_Clipping_Processor": ["anvil_community"],
+    "data_fusion": ["bridges_community_gpu"],
+    "Dam_Flood_Inundation_Map_Connector": ["anvil_community"],
+    "cybergis-abm": ["anvil_community"],
+    "Customized_Resilience_Inference_Measurement_Framework": ["aces_community", "keeling_community"],
+    "CUAHSI_Subsetter_Connector":  ["anvil_community"],
+    "covid-access": ["keeling_community", "expanse_community", "anvil_community"],
+  };
+
   // Code for job dropdown component
   const handleJobSelect = (job: string) => {
     setSelectedJob(job);
+
+    //Task 2
+    if (jobToHpcMap[job]) {
+      setHpcs(jobToHpcMap[job]);
+    } else {
+      setHpcs([]); // or full HPC list if you want by default
+    }
+  
+    setSelectedHpc(null); 
+
     // Handle job selection (e.g., navigate to job link, display job details, etc.)
     console.log('Selected Job:', job);
   };
+
   interface JobDropdownProps {
     jobs: string[];
     onJobSelect: (job: string) => void;
@@ -246,18 +316,7 @@ function App() {
             "jupyterhubApiToken": token_dict["jupyterhubApiToken"],  // passing oauth
             "localExecutableFolder": {"type": "git", "gitId": selectedJob ? selectedJob : "hello_world"},  // basically just pass the jobID in as the gitId
             "slurm": {"time": "30:00", "memory": "16GB"},
-            "param": {
-              "mobility_mode": "DRIVING",
-              "population_type": "ZIP",
-              "max_travel_time": "30",
-              "access_measure": "ALL",
-              "supply_filename": "supply/ContinentalHospitals.shp",
-              "supply_capacity": "BEDS",
-              "supply_latlon_or_id": "ID",
-              "supply_id": "ZIP",
-              "supply_lat": "",
-              "supply_lon": ""
-            },
+            "param": params,
           }
         )
       })
@@ -376,10 +435,10 @@ function App() {
 
   return (
     <ChakraProvider>
-      <Box className="p-4">
+      <Tabs variant="enclosed">
         <Box className="flex justify-between items-center border-b pb-4 mb-4">
           <Heading size="lg">CyberGIS-Compute Web App (ALPHA RELEASE, UNSTABLE)</Heading>
-          <Tabs variant="enclosed">
+          
             <TabList>
               <Tab>Job Configuration</Tab>
               <Tab>Your Job Status</Tab>
@@ -387,11 +446,10 @@ function App() {
               <Tab>Your Jobs</Tab>
               <Tab>Past Results</Tab>
             </TabList>
-          </Tabs>
         </Box>
-        <Tabs variant="enclosed">
+        
           <TabPanels>
-            <TabPanel>
+            <TabPanel> {/*Job Configuration*/}
               {/* ANNOUNCEMENTS */}
               <Box className="mb-4">
                 <Heading size="md" className="mb-2">Announcements</Heading>
@@ -428,24 +486,127 @@ function App() {
                   <AccordionItem>
                     <AccordionButton>
                       <Box flex="1" textAlign="left">
-                        Slurm Computing Configurations (Not implemented yet)
+                        Slurm Computing Configurations
                       </Box>
                       <AccordionIcon />
                     </AccordionButton>
                     <AccordionPanel pb={4}>
-                      {/* Add content for Slurm Computing Configurations here */}
+                      <Box mb={3}>
+                  
+                  <Text mb={1}>SLURM Time:</Text>
+                  <Input
+                    value={slurmParams.time}
+                    onChange={(e) => setSlurmParams({ ...slurmParams, time: e.target.value })}
+                    placeholder="30:00"
+                  />
+                </Box>
+
+                <Box mb={3}>
+                  <Text mb={1}>SLURM Memory:</Text>
+                  <Input
+                    value={slurmParams.memory}
+                    onChange={(e) => setSlurmParams({ ...slurmParams, memory: e.target.value })}
+                    placeholder="16GB"
+                  />
+                </Box>
                     </AccordionPanel>
                   </AccordionItem>
                   <AccordionItem>
                     <AccordionButton>
                       <Box flex="1" textAlign="left">
-                        Input Parameters (Not implemented yet)
+                        Input Parameters
                       </Box>
                       <AccordionIcon />
                     </AccordionButton>
                     <AccordionPanel pb={4}>
-                      {/* Add content for Input Parameters here */}
-                    </AccordionPanel>
+  <Box mb={3}>
+    <Text mb={1}>Mobility Mode:</Text>
+    <Input
+      value={params.mobility_mode}
+      onChange={(e) => setParams({...params, mobility_mode: e.target.value})}
+      placeholder="DRIVING"
+    />
+  </Box>
+  <Box mb={3}>
+    <Text mb={1}>Population Type:</Text>
+    <Input
+      value={params.population_type}
+      onChange={(e) => setParams({...params, population_type: e.target.value})}
+      placeholder="ZIP"
+    />
+  </Box>
+  <Box mb={3}>
+    <Text mb={1}>Max Travel Time (minutes):</Text>
+    <Input
+      value={params.max_travel_time}
+      onChange={(e) => setParams({...params, max_travel_time: e.target.value})}
+      placeholder="30"
+    />
+  </Box>
+  <Box mb={3}>
+    <Text mb={1}>Access Measure:</Text>
+    <Input
+      value={params.access_measure}
+      onChange={(e) => setParams({...params, access_measure: e.target.value})}
+      placeholder="ALL"
+    />
+  </Box>
+
+<Box mb={3}>
+  <Text mb={1}>Supply Filename:</Text>
+  <Input
+    value={params.supply_filename}
+    onChange={(e) => setParams({...params, supply_filename: e.target.value})}
+    placeholder="supply/ContinentalHospitals.shp"
+  />
+</Box>
+
+<Box mb={3}>
+  <Text mb={1}>Supply Capacity:</Text>
+  <Input
+    value={params.supply_capacity}
+    onChange={(e) => setParams({...params, supply_capacity: e.target.value})}
+    placeholder="BEDS"
+  />
+</Box>
+
+<Box mb={3}>
+  <Text mb={1}>Supply LatLon or ID:</Text>
+  <Input
+    value={params.supply_latlon_or_id}
+    onChange={(e) => setParams({...params, supply_latlon_or_id: e.target.value})}
+    placeholder="ID"
+  />
+</Box>
+
+<Box mb={3}>
+  <Text mb={1}>Supply ID:</Text>
+  <Input
+    value={params.supply_id}
+    onChange={(e) => setParams({...params, supply_id: e.target.value})}
+    placeholder="ZIP"
+  />
+</Box>
+
+<Box mb={3}>
+  <Text mb={1}>Supply Latitude:</Text>
+  <Input
+    value={params.supply_lat}
+    onChange={(e) => setParams({...params, supply_lat: e.target.value})}
+    placeholder="Supply Latitude"
+  />
+</Box>
+
+<Box mb={3}>
+  <Text mb={1}>Supply Longitude:</Text>
+  <Input
+    value={params.supply_lon}
+    onChange={(e) => setParams({...params, supply_lon: e.target.value})}
+    placeholder="Supply Longitude"
+  />
+</Box>
+</AccordionPanel>
+
                   </AccordionItem>
                   <AccordionItem>
                     <AccordionButton>
@@ -475,28 +636,57 @@ function App() {
                   <Button colorScheme="blue" className="mt-4" onClick={handleJobSubmit}>Submit Job</Button>
                 </Box>
               </Box>
-              <Text className="mb-4">{submissionResponse ? submissionResponse : "Submit a job to view its status"}</Text>
+              {/*<Text className="mb-4">{submissionResponse ? submissionResponse : "Submit a job to view its status"}</Text>
               <Text className="mb-4">{jobFinished ? jobFinished : "Awaiting Job Submission"}</Text>
-              <Text className="mb-4">{jobOutput ? jobOutput : "Awaiting Job Submission"}</Text>
-              <Box>
+              <Text className="mb-4">{jobOutput ? jobOutput : "Awaiting Job Submission"}</Text>*/}
+              {/*<Box>
                   <Button colorScheme="blue" className="mt-4" onClick={handleDownloadResult}>Download Result</Button>
                 </Box>
-            </TabPanel>
+                */}
+            </TabPanel> {/*end of job configuration*/}
+
             <TabPanel>
               {/* Add content for "Your Job Status" tab here */}
+              <Heading size="md" mb={4}>Your Job Status</Heading>
+
+              <Text className="mb-4">
+                {submissionResponse ? submissionResponse : "Submit a job to view its status"}
+              </Text>
+
+              <Text className="mb-4">
+                {jobFinished ? jobFinished : "Awaiting Job Submission"}
+              </Text>
+
+              <Text className="mb-4">
+                {jobOutput ? jobOutput : "Awaiting Job Submission"}
+              </Text>
             </TabPanel>
+
             <TabPanel>
-              {/* Add content for "Download Job Result" tab here */}
-            </TabPanel>
-            <TabPanel>
+          
+            <Heading size="md" mb={4}>Download Your Results</Heading>
+            {downloadID ? (
+              <>
+                <Text>Job completed. Your results are ready to download!</Text>
+                <Button colorScheme="blue" className="mt-4" onClick={handleDownloadResult}>
+                  Download Result
+                </Button>
+              </>
+            ) : (
+              <Text>No completed job found. Submit a job first!</Text>
+            )}
+          </TabPanel>
+
+          <TabPanel>
               {/* Add content for "Your Jobs" tab here */}
-            </TabPanel>
-            <TabPanel>
+          </TabPanel>
+
+          <TabPanel>
               {/* Add content for "Past Results" tab here */}
-            </TabPanel>
+          </TabPanel>
+
           </TabPanels>
         </Tabs>
-      </Box>
     </ChakraProvider>
   );
 };
