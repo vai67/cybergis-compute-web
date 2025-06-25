@@ -13,8 +13,8 @@ function Loading() {
 
   return (
     <Box
-      height="100vh"
-      width="100vw"
+      height="100%"
+      width="100%"
       display="flex"
       justifyContent="center"
       alignItems="center"

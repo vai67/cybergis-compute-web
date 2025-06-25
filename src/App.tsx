@@ -76,27 +76,11 @@ function App() {
   const [jobOutput, setJobOutput] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
-  //Task 3
-  const [params, setParams] = React.useState({
-    mobility_mode: "",
-    population_type: "",
-    max_travel_time: "",
-    access_measure: "",
-    supply_filename: "",
-    supply_capacity: "",
-    supply_latlon_or_id: "",
-    supply_id: "",
-    supply_lat: "",
-    supply_lon: ""
-  });
+  const [paramRules, setParamRules] = useState<{ [key: string]: any }>({});
+  const [params, setParams] = useState<{ [key: string]: string }>({});
+  const [slurmParamRules, setSlurmParamRules] = useState<{ [key: string]: any }>({});
+  const [slurmParams, setSlurmParams] = useState<{ [key: string]: any }>({});
 
-  //Task 4
-  const [slurmParams, setSlurmParams] = React.useState({
-    time: "",
-    memory: "",
-  });
-  
-  
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
@@ -149,52 +133,65 @@ function App() {
     );
   };
 
-  //Task 2 
-  const jobToHpcMap: { [key: string]: string[] } = {
-    "wrfhydro-5.x": ["keeling_community", "expanse_community", "anvil_community"],
-    "WRFHydro_Postprocess" : ["anvil_community"],
-    "Watershed_DEM_Raster_Connector" : ["anvil_community"],
-    "three-examples" : ["anvil_community", "expanse_community", "keeling_community", "rails_community"],
-    "summa3" : ["keeling_community", "expanse_community"],
-    "Subset_AORC_Forcing_Data_Processor" : ["anvil_community"],
-    "SimpleDataProc_Processor" : ["anvil_community"],
-    "SimpleDataClean_Processor" : ["anvil_community"],
-    "simple-g" : ["anvil_community"],
-    "pysal-access" : ["anvil_community", "expanse_community", "keeling_community"],
-    "population_vulnerable_to_dam_failure" : ["anvil_community", "keeling_community"],
-    "mpi-test" : ["keeling_community", "expanse_community", "anvil_community"],
-    "herop_spatial_access" : ["keeling_community"],
-    "hello_world" : ["aces_community", "anvil_community", "expanse_community", "keeling_community", "rails_community"],
-    "geoai-gpu": ["anvil_gpu", "keeling_gpu", "keeling_community"],
-    "Extract_Inundation_Census_Tracts_Processor" : ["anvil_community"],
-    "ERA5_Connector" : ["anvil_community"],
-    "DEM_Raster_Reprojection_Processor" : ["anvil_community"],
-    "DEM_Raster_Merging_Processor": ["anvil_community"],
-    "DEM_Raster_Clipping_Processor": ["anvil_community"],
-    "data_fusion": ["bridges_community_gpu"],
-    "Dam_Flood_Inundation_Map_Connector": ["anvil_community"],
-    "cybergis-abm": ["anvil_community"],
-    "Customized_Resilience_Inference_Measurement_Framework": ["aces_community", "keeling_community"],
-    "CUAHSI_Subsetter_Connector":  ["anvil_community"],
-    "covid-access": ["keeling_community", "expanse_community", "anvil_community"],
-  };
 
   // Code for job dropdown component
-  const handleJobSelect = (job: string) => {
+  const handleJobSelect = async (job: string) => {
     setSelectedJob(job);
+  
+    try {
+      const response = await fetch('https://cgjobsup-test.cigi.illinois.edu/v2/git');
+      const data = await response.json();
+  
+      const jobDetails = data.git[job];
+      if (jobDetails) {
 
-    //Task 2
-    if (jobToHpcMap[job]) {
-      setHpcs(jobToHpcMap[job]);
-    } else {
-      setHpcs([]); // or full HPC list if you want by default
+        //Hpc 
+        setHpcs(jobDetails.supported_hpc || []);
+
+        const rules = jobDetails.param_rules;
+        setParamRules(rules);
+
+        if(jobDetails.param_rules){
+
+          const rules = jobDetails.param_rules;
+          setParamRules(rules);
+  
+          const initialParams: { [key: string]: string } = {};
+          Object.keys(rules).forEach((key) => {
+            initialParams[key] = "";
+        });
+        setParams(initialParams);
+      } else {
+        setParamRules({});
+        setParams({});
+      }
     }
   
-    setSelectedHpc(null); 
-
-    // Handle job selection (e.g., navigate to job link, display job details, etc.)
-    console.log('Selected Job:', job);
+      // Slurm:
+      if (jobDetails && jobDetails.slurm_input_rules) {
+        const slurmRules = jobDetails.slurm_input_rules;
+        setSlurmParamRules(slurmRules);
+  
+        const initialSlurmParams: { [key: string]: string } = {};
+        Object.entries(slurmRules).forEach(([key, rule]: [string, any]) => {
+          initialSlurmParams[key] = rule.default_value?.toString() || "";
+        });
+        setSlurmParams(initialSlurmParams);
+      } else {
+        setSlurmParamRules({});
+        setSlurmParams({});
+      }
+  
+    } catch (err) {
+      console.error("Error fetching job param_rules:", err);
+      setParamRules({});
+      setParams({});
+      setSlurmParamRules({});
+      setSlurmParams({});
+    }
   };
+  
+  
 
   interface JobDropdownProps {
     jobs: string[];
@@ -491,24 +488,18 @@ function App() {
                       <AccordionIcon />
                     </AccordionButton>
                     <AccordionPanel pb={4}>
-                      <Box mb={3}>
-                  
-                  <Text mb={1}>SLURM Time:</Text>
-                  <Input
-                    value={slurmParams.time}
-                    onChange={(e) => setSlurmParams({ ...slurmParams, time: e.target.value })}
-                    placeholder="30:00"
-                  />
-                </Box>
-
-                <Box mb={3}>
-                  <Text mb={1}>SLURM Memory:</Text>
-                  <Input
-                    value={slurmParams.memory}
-                    onChange={(e) => setSlurmParams({ ...slurmParams, memory: e.target.value })}
-                    placeholder="16GB"
-                  />
-                </Box>
+                    {Object.entries(slurmParamRules).map(([paramName, rule]) => (
+                    <Box mb={3} key={paramName}>
+                      <Text mb={1}>{paramName}:</Text>
+                      <Input
+                        value={params[paramName] || ""}
+                        onChange={(e) =>
+                          setParams({ ...params, [paramName]: e.target.value })
+                        }
+                        placeholder={rule.description || paramName}
+                      />
+                    </Box>
+                  ))}
                     </AccordionPanel>
                   </AccordionItem>
                   <AccordionItem>
@@ -519,93 +510,20 @@ function App() {
                       <AccordionIcon />
                     </AccordionButton>
                     <AccordionPanel pb={4}>
-  <Box mb={3}>
-    <Text mb={1}>Mobility Mode:</Text>
-    <Input
-      value={params.mobility_mode}
-      onChange={(e) => setParams({...params, mobility_mode: e.target.value})}
-      placeholder="DRIVING"
-    />
-  </Box>
-  <Box mb={3}>
-    <Text mb={1}>Population Type:</Text>
-    <Input
-      value={params.population_type}
-      onChange={(e) => setParams({...params, population_type: e.target.value})}
-      placeholder="ZIP"
-    />
-  </Box>
-  <Box mb={3}>
-    <Text mb={1}>Max Travel Time (minutes):</Text>
-    <Input
-      value={params.max_travel_time}
-      onChange={(e) => setParams({...params, max_travel_time: e.target.value})}
-      placeholder="30"
-    />
-  </Box>
-  <Box mb={3}>
-    <Text mb={1}>Access Measure:</Text>
-    <Input
-      value={params.access_measure}
-      onChange={(e) => setParams({...params, access_measure: e.target.value})}
-      placeholder="ALL"
-    />
-  </Box>
 
-<Box mb={3}>
-  <Text mb={1}>Supply Filename:</Text>
-  <Input
-    value={params.supply_filename}
-    onChange={(e) => setParams({...params, supply_filename: e.target.value})}
-    placeholder="supply/ContinentalHospitals.shp"
-  />
-</Box>
-
-<Box mb={3}>
-  <Text mb={1}>Supply Capacity:</Text>
-  <Input
-    value={params.supply_capacity}
-    onChange={(e) => setParams({...params, supply_capacity: e.target.value})}
-    placeholder="BEDS"
-  />
-</Box>
-
-<Box mb={3}>
-  <Text mb={1}>Supply LatLon or ID:</Text>
-  <Input
-    value={params.supply_latlon_or_id}
-    onChange={(e) => setParams({...params, supply_latlon_or_id: e.target.value})}
-    placeholder="ID"
-  />
-</Box>
-
-<Box mb={3}>
-  <Text mb={1}>Supply ID:</Text>
-  <Input
-    value={params.supply_id}
-    onChange={(e) => setParams({...params, supply_id: e.target.value})}
-    placeholder="ZIP"
-  />
-</Box>
-
-<Box mb={3}>
-  <Text mb={1}>Supply Latitude:</Text>
-  <Input
-    value={params.supply_lat}
-    onChange={(e) => setParams({...params, supply_lat: e.target.value})}
-    placeholder="Supply Latitude"
-  />
-</Box>
-
-<Box mb={3}>
-  <Text mb={1}>Supply Longitude:</Text>
-  <Input
-    value={params.supply_lon}
-    onChange={(e) => setParams({...params, supply_lon: e.target.value})}
-    placeholder="Supply Longitude"
-  />
-</Box>
-</AccordionPanel>
+                      {Object.entries(paramRules).map(([paramName, rule]) => (
+                      <Box mb={3} key={paramName}>
+                        <Text mb={1}>{paramName}:</Text>
+                        <Input
+                          value={params[paramName] || ""}
+                          onChange={(e) =>
+                            setParams({ ...params, [paramName]: e.target.value })
+                          }
+                          placeholder={rule.description || paramName}
+                        />
+                      </Box>
+                    ))}
+                </AccordionPanel>
 
                   </AccordionItem>
                   <AccordionItem>
