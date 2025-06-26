@@ -1,6 +1,6 @@
 import { useState, useEffect, ChangeEvent } from 'react'
 import './App.css'
-import { TabList, TabPanel, Tab, Tabs, TabPanels, ChakraProvider, Box, Heading, Text, Select, Input, Checkbox, Button, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon} from '@chakra-ui/react';
+import { TabList, TabPanel, Tab, Tabs, TabPanels, ChakraProvider, Box, Heading, Text, Select, Input, Checkbox, Button, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Slider} from '@chakra-ui/react';
 import { AnnouncementType, ListData } from './types';
 import Loading from './Loading';
 import React from 'react';
@@ -77,7 +77,7 @@ function App() {
   const [file, setFile] = useState<File | null>(null);
 
   const [paramRules, setParamRules] = useState<{ [key: string]: any }>({});
-  const [params, setParams] = useState<{ [key: string]: string }>({});
+  const [params, setParams] = useState<{ [key: string]: string | number}>({});
   const [slurmParamRules, setSlurmParamRules] = useState<{ [key: string]: any }>({});
   const [slurmParams, setSlurmParams] = useState<{ [key: string]: any }>({});
 
@@ -491,13 +491,19 @@ function App() {
                     {Object.entries(slurmParamRules).map(([paramName, rule]) => (
                     <Box mb={3} key={paramName}>
                       <Text mb={1}>{paramName}:</Text>
-                      <Input
-                        value={params[paramName] || ""}
-                        onChange={(e) =>
-                          setParams({ ...params, [paramName]: e.target.value })
-                        }
-                        placeholder={rule.description || paramName}
-                      />
+                      <input
+                                  type="range"
+                                  min={rule.min}
+                                  max={rule.max}
+                                  step={rule.step}
+                                  value={slurmParams[paramName] ?? rule.default_value}
+                                  onChange={(e) =>
+                                    setSlurmParams({ ...slurmParams, [paramName]: parseInt(e.target.value) })
+                                  }
+                                />
+                                <Text mt={2}>
+                                  Value: {slurmParams[paramName] ?? rule.default_value}
+                                </Text>
                     </Box>
                   ))}
                     </AccordionPanel>
@@ -511,18 +517,55 @@ function App() {
                     </AccordionButton>
                     <AccordionPanel pb={4}>
 
-                      {Object.entries(paramRules).map(([paramName, rule]) => (
+                    {Object.entries(paramRules).map(([paramName, rule]) => (
                       <Box mb={3} key={paramName}>
                         <Text mb={1}>{paramName}:</Text>
-                        <Input
-                          value={params[paramName] || ""}
-                          onChange={(e) =>
-                            setParams({ ...params, [paramName]: e.target.value })
-                          }
-                          placeholder={rule.description || paramName}
-                        />
+
+                        {rule.type === "string_input" && (
+                          <Input
+                            value={params[paramName] || ""}
+                            onChange={(e) =>
+                              setParams({ ...params, [paramName]: e.target.value })
+                            }
+                            placeholder={rule.description || paramName}
+                          />
+                        )}
+
+                        {rule.type === "string_option" && (
+                          <Select
+                            value={params[paramName] || ""}
+                            onChange={(e) =>
+                              setParams({ ...params, [paramName]: e.target.value })
+                            }
+                          >
+                            {rule.options.map((opt: string) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </Select>
+                        )}
+
+                        {rule.type === "integer" && (
+                              <>
+                                <input
+                                  type="range"
+                                  min={rule.min}
+                                  max={rule.max}
+                                  step={rule.step}
+                                  value={params[paramName] ?? rule.default_value}
+                                  onChange={(e) =>
+                                    setParams({ ...params, [paramName]: parseInt(e.target.value) })
+                                  }
+                                />
+                                <Text mt={2}>
+                                  Value: {params[paramName] ?? rule.default_value}
+                                </Text>
+                              </>
+                        )}
                       </Box>
                     ))}
+
                 </AccordionPanel>
 
                   </AccordionItem>
